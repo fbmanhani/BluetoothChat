@@ -11,16 +11,17 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.PermissionChecker
-import android.view.Menu
+import android.support.v7.app.AppCompatActivity
+import android.text.InputType
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Toast
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.ATIVA_BLUETOOTH
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.ATIVA_DESCOBERTA_BLUETOOTH
@@ -58,10 +59,6 @@ class  MainActivity : AppCompatActivity() {
 
    private  val listaModos = listOf(MODO_SERVIDOR, MODO_CLIENTE)
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     private fun trataSelecaoModo(dialog: DialogInterface?, which: Int) {
         dialog?.cancel()
         when (listaModos.get(which)) {
@@ -80,6 +77,24 @@ class  MainActivity : AppCompatActivity() {
                 startActivityForResult(descobertaIntent,ATIVA_DESCOBERTA_BLUETOOTH)
             }
         }
+        selecionarNome()
+    }
+
+    private fun selecionarNome() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Insira o nome")
+
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        builder.setView(input)
+        builder.setPositiveButton("Ok") {
+                _, _ -> adaptadorBt?.name = input.text.toString()
+        }
+
+        builder.setNegativeButton("Cancelar") {
+                dialog, which -> dialog.cancel()
+        }
+        builder.show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
