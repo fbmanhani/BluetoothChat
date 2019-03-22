@@ -26,6 +26,8 @@ import com.example.bluetoothchat.BluetoothSingleton.Constantes.ATIVA_BLUETOOTH
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.ATIVA_DESCOBERTA_BLUETOOTH
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.MENSAGEM_DESCONEXAO
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.MENSAGEM_TEXTO
+import com.example.bluetoothchat.BluetoothSingleton.Constantes.MODO_CLIENTE
+import com.example.bluetoothchat.BluetoothSingleton.Constantes.MODO_SERVIDOR
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.REQUER_PERMISSOES_LOCALIZACAO
 import com.example.bluetoothchat.BluetoothSingleton.Constantes.TEMPO_DESCOBERTA_SERVICO_BLUETOOTH
 import com.example.bluetoothchat.BluetoothSingleton.adaptadorBt
@@ -45,7 +47,7 @@ class  MainActivity : AppCompatActivity() {
     // BroadcastReceiver para eventos descoberta e finalização de busca
     private var eventosBtReceiver: EventosBluetoothReceiver? = null
 
-    // Adapter que atualiza a lista de mensagens
+    // Adapter que atualiza a listaModos de mensagens
     var historicoAdapter: ArrayAdapter<String>? = null
 
     // Handler da tela principal
@@ -53,6 +55,32 @@ class  MainActivity : AppCompatActivity() {
 
     // Dialog para aguardar conexões e busca
     private var aguardeDialog: ProgressDialog? = null
+
+   private  val listaModos = listOf(MODO_SERVIDOR, MODO_CLIENTE)
+
+    override fun onStart() {
+        super.onStart()
+    }
+
+    private fun trataSelecaoModo(dialog: DialogInterface?, which: Int) {
+        dialog?.cancel()
+        when (listaModos.get(which)) {
+            MODO_CLIENTE -> {
+                toast("Configurando modo cliente")
+                // (Re)Inicializando a Lista de dispositivos encontrados
+                listaBtsEncontrados = mutableListOf()
+                registraReceiver()
+                adaptadorBt?.startDiscovery()
+                exibirAguardeDialog("Procurando dispositivos Bluetooth", 0)
+            }
+            MODO_SERVIDOR -> {
+                toast("Configurando modo servidor")
+                val descobertaIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+                descobertaIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION,TEMPO_DESCOBERTA_SERVICO_BLUETOOTH)
+                startActivityForResult(descobertaIntent,ATIVA_DESCOBERTA_BLUETOOTH)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +100,13 @@ class  MainActivity : AppCompatActivity() {
                    ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION),REQUER_PERMISSOES_LOCALIZACAO)
                }
         }
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Selecione o modo de operação")
+        builder.setItems(listaModos.toTypedArray()) {
+                dialog, which ->  trataSelecaoModo(dialog, which)
+        }
+        builder.show()
     }
 
     private fun pegandoAdaptadorBt() {
@@ -154,10 +189,10 @@ class  MainActivity : AppCompatActivity() {
         dialog?.dismiss()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_modo_aplicativo,menu)
-        return true
-    }
+//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+//        menuInflater.inflate(R.menu.menu_modo_aplicativo,menu)
+//        return true
+//    }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         var retorno = false
@@ -193,7 +228,7 @@ class  MainActivity : AppCompatActivity() {
         registerReceiver(eventosBtReceiver, IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
     }
 
-    fun desregistraReceiver() = eventosBtReceiver?.let{unregisterReceiver(it)}
+    fun desregistraReceiver() = eventosBtReceiver?.let{ unregisterReceiver(it)}
 
     private fun exibirAguardeDialog(mensagem:String, tempo: Int) {
         aguardeDialog = ProgressDialog.show(this,"Aguarde",mensagem,true,true) {onCancelDialog(it)}

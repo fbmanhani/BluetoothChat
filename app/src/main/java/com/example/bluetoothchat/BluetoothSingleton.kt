@@ -24,6 +24,9 @@ object BluetoothSingleton {
 
         // RequestCode para chamar o SO para requestPermissions
         const val REQUER_PERMISSOES_LOCALIZACAO = 10
+
+        const val MODO_SERVIDOR = "Modo Servidor"
+        const val MODO_CLIENTE = "Modo Cliente"
     }
 
     // Adaptador Bluetooth do dispositivo usado pelas Threads filhas
